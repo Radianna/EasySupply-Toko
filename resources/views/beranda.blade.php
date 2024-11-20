@@ -22,20 +22,20 @@
     <!-- Category Section -->
     <div class="bg-white shadow mt-4 px-6 py-4 grid grid-cols-4 md:grid-cols-6 gap-4 ">
         <a href="{{ url('list-produk') }}" class="text-center">
-            <img class="mx-auto border-4 rounded-md border-[#008080]" src="{{ asset('image/makanan.jpg') }}" alt="Makanan">
+            <img class="mx-auto border-4 rounded-md border-[#008080]" src="{{ asset('image/makanan.png') }}" alt="Makanan">
             <div class="mt-2 text-sm text-[#333333]">MAKANAN</div>
         </a>
         <div class="text-center">
-            <img class="mx-auto border-4 rounded-md border-[#008080]" src="{{ asset('image/minuman.jpg') }}" alt="Minuman">
+            <img class="mx-auto border-4 rounded-md border-[#008080]" src="{{ asset('image/minuman.png') }}" alt="Minuman">
             <div class="mt-2 text-sm text-[#333333]">MINUMAN</div>
         </div>
         <div class="text-center">
-            <img class="mx-auto border-4 rounded-md border-[#008080]" src="{{ asset('image/perabotan.jpg') }}"
+            <img class="mx-auto border-4 rounded-md border-[#008080]" src="{{ asset('image/perabotan.png') }}"
                 alt="Perabotan">
             <div class="mt-2 text-sm text-[#333333]">PERABOTAN</div>
         </div>
         <div class="text-center">
-            <img class="mx-auto border-4 rounded-md border-[#008080]" src="{{ asset('image/lain-lain.jpg') }}"
+            <img class="mx-auto border-4 rounded-md border-[#008080]" src="{{ asset('image/lain-lain.png') }}"
                 alt="Lain Lain">
             <div class="mt-2 text-sm text-[#333333]">LAIN LAIN</div>
         </div>
@@ -53,9 +53,9 @@
                 <img src="{{ asset('image/tolak-angin.png') }}" alt="Produk" class="w-full h-32 object-cover rounded">
                 <h3 class="mt-2 font-semibold text-gray-800 overflow-hidden text-ellipsis"
                     style="height: 4.5rem; line-height: 1.5rem; white-space: normal;">
-                    Tolak Angin Cair Extra Herbal untuk Menjaga Kesehatan Tubuh dan Imunitas
+                    Tolak Angin Cair Extra Herbal
                 </h3>
-                <p class="text-red-600 font-bold mt-2">Rp. 10.000</p>
+                <p class="text-red-600 font-bold mt-2">Rp. 2.000</p>
                 <div class="flex items-center mt-2">
                     <select class="border border-gray-300 text-sm rounded p-1 mr-2">
                         <option>pcs</option>
@@ -70,12 +70,12 @@
             </div>
 
             <div class="bg-white rounded-lg shadow-lg p-4 min-w-[200px] max-w-[200px] flex flex-col justify-between">
-                <img src="{{ asset('image/tolak-angin.png') }}" alt="Produk" class="w-full h-32 object-cover rounded">
+                <img src="{{ asset('image/air-mineral.png') }}" alt="Produk" class="w-full h-32 object-cover rounded">
                 <h3 class="mt-2 font-semibold text-gray-800 overflow-hidden text-ellipsis"
                     style="height: 4.5rem; line-height: 1.5rem; white-space: normal;">
-                    Tolak Angin
+                    Le Mineral
                 </h3>
-                <p class="text-red-600 font-bold mt-2">Rp. 10.000</p>
+                <p class="text-red-600 font-bold mt-2">Rp. 3.000</p>
                 <div class="flex items-center mt-2">
                     <select class="border border-gray-300 text-sm rounded p-1 mr-2">
                         <option>pcs</option>
