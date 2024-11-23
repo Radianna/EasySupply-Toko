@@ -78,14 +78,14 @@
             <div class="border-t pt-4 mt-4">
                 <div class="flex justify-between items-center">
                     <span class="text-lg font-semibold">Total:</span>
-                    <span id="cart-total" class="text-lg font-bold text-green-500">Rp. 0</span>
+                    <span id="cart-total" class="text-lg font-bold text-teal-500">Rp. 0</span>
                 </div>
             </div>
 
             <!-- Tombol Checkout -->
             <div class="mt-4">
                 <button onclick="checkout()"
-                    class="w-full bg-green-500 text-white py-2 px-4 rounded-lg font-bold shadow-lg hover:bg-green-600">
+                    class="w-full bg-teal-700 text-white py-2 px-4 rounded-lg font-bold shadow-lg hover:bg-teal-900">
                     Lanjutkan ke Pembayaran
                 </button>
             </div>
@@ -101,7 +101,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         let cart = []; // Keranjang diinisialisasi sebagai array kosong
-        const baseUrl = "<?php echo env('BASE_URL'); ?>";
+        const apiUrl = "<?php echo env('API_URL'); ?>";
 
         // Helper untuk menemukan item di keranjang
         function findCartItemById(mappingId) {
@@ -130,7 +130,7 @@
             try {
                 await fetchCart(); // Pastikan data keranjang diambil lebih dulu
 
-                const response = await fetch(`${baseUrl}/api/get-list-produk`);
+                const response = await fetch(`${apiUrl}/api/get-list-produk`);
                 if (!response.ok) throw new Error("Failed to fetch product data");
 
                 const products = await response.json();
@@ -143,7 +143,7 @@
         // Ambil image
         async function fetchImage(url) {
             try {
-                const response = await fetch(`${baseUrl}/api/get-image-produk/${url}`);
+                const response = await fetch(`${apiUrl}/api/get-image-produk/${url}`);
                 if (!response.ok) throw new Error("Failed to fetch image");
             } catch (error) {            
                 console.error('Error fetching image:', error);
@@ -156,14 +156,16 @@
             let productHTML = '';
 
             products.forEach(product => {
-                await fetchImage(product.gambar);
+                // kondisi jika gambar sudah ada didalam storage/produk
+                // maka tidak perlu lagi fetch
+                fetchImage(product.gambar);
                 const defaultUnit = product.units[0];
                 const cartItem = findCartItemById(defaultUnit.id);
                 const quantity = cartItem ? cartItem.quantity : 0;
 
                 productHTML += `
             <div class="bg-white rounded-lg shadow-md p-4 flex items-start mb-4">
-                <img src="${product.gambar}" alt="${product.name}" class="w-20 h-20 object-cover mr-4">
+                <img src="{{ asset('storage/produk') }}/${product.gambar}" alt="${product.name}" class="w-20 h-20 object-cover mr-4">
                 <div class="flex-1">
                     <h2 class="text-lg font-semibold">${product.name}</h2>
                     <p class="text-xl font-bold text-gray-800" id="harga-${product.id}">
@@ -187,7 +189,7 @@
                     </div>
                 </div>
             </div>
-        `;
+            `;
             });
 
             productContainer.innerHTML = productHTML;
@@ -207,7 +209,6 @@
                 qtyInput.value = cartItem ? cartItem.quantity : 0;
             }
         }
-
         // Input jumlah produk secara manual
         function inputQty(productId) {
             const qtyInput = document.getElementById(`qty-${productId}`);
@@ -317,7 +318,7 @@
 
             let total = 0;
             console.log("Cart:", cart);
-            
+
 
             cart.forEach(item => {
                 const itemHTML = `

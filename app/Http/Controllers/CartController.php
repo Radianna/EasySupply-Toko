@@ -8,11 +8,11 @@ use Illuminate\Support\Facades\Log;
 
 class CartController extends Controller
 {
-    private $baseUrl;
+    private $apiUrl;
 
     public function __construct()
     {
-        $this->baseUrl = env('BASE_URL') . '/api/get-data-produk';
+        $this->apiUrl = env('API_URL') . '/api/get-data-produk';
     }
 
     public function addToCart(Request $request)
@@ -45,7 +45,7 @@ class CartController extends Controller
         }
 
         // Mengambil data produk dari API berdasarkan produk ID
-        $response = Http::get($this->baseUrl . '/' . $produkId);
+        $response = Http::get($this->apiUrl . '/' . $produkId);
 
         if ($response->successful()) {
             $productData = $response->json();
