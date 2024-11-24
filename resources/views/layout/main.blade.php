@@ -98,6 +98,7 @@
     <!-- Chat Button -->
     <div id="keranjang"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         let cart = []; // Keranjang diinisialisasi sebagai array kosong
@@ -215,11 +216,11 @@
                     <div class="flex items-center mt-2">
                         <select class="border border-gray-300 rounded-lg text-sm p-2" onchange="updateHarga(${product.id}, this)">
                             ${product.units.map(unit => `
-                                <option value="${unit.harga}" data-mapping-id="${unit.id}" 
-                                    ${unit.id === defaultUnit.id ? 'selected' : ''}>
-                                    ${unit.unit_name}
-                                </option>
-                            `).join('')}
+                                            <option value="${unit.harga}" data-mapping-id="${unit.id}" 
+                                                ${unit.id === defaultUnit.id ? 'selected' : ''}>
+                                                ${unit.unit_name}
+                                            </option>
+                                        `).join('')}
                         </select>
                         <div class="flex ml-2">
                             <button onclick="decreaseQty(${product.id})" class="bg-gray-200 text-gray-700 px-2 mx-2">-</button>
@@ -339,9 +340,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             fetchProducts();
         });
-    </script>
-    {{-- Keranjang --}}
-    <script>
+
+
         // Fungsi untuk membuka keranjang
         function openCart() {
             document.getElementById('cart-container').classList.remove('hidden');
@@ -414,34 +414,63 @@
                 console.error("Error removing item from cart:", error);
             }
         }
-    </script>
-    {{-- check out --}}
-    <script>
+
+        // check out
         async function checkout() {
             if (cart.length === 0) {
-                alert('Keranjang kosong!');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Keranjang kosong!',
+                    text: 'Silakan tambahkan produk ke keranjang sebelum checkout.',
+                });
                 return;
             }
 
-            alert('Lanjutkan ke pembayaran!');
-            // Tambahkan logika checkout di sini
-            $.ajax({
-                url: `{{ route('checkout') }}`,
-                method: 'post',
-                data: {
-                    // id user
-                    id: localStorage.getItem('id'),
-                    _token: $('meta[name="csrf-token"]').attr('content')
+            const id = localStorage.getItem('id');
+            const token = localStorage.getItem('token');
+
+            if (!id || !token) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ID atau Token tidak valid',
+                    text: 'Silakan login ulang.',
+                });
+                return;
+            }
+
+            try {
+                const response = await $.ajax({
+                    url: `{{ route('checkout') }}`,
+                    method: 'POST',
+                    data: {
+                        id,
+                        token,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                if (response.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Checkout berhasil!',
+                        text: 'Pesanan Anda telah diproses.',
+                    });
+                    fetchCart();
+                    closeCart();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: response.message || 'Terjadi kesalahan saat checkout.',
+                    });
                 }
-                success: function(response) {
-                    console.log('Checkout successful:', response);
-                    // Lakukan tindakan lain setelah checkout berhasil
-                },
-                error: function(xhr, status, error) {
-                    console.error('Checkout failed:', error);
-                    // Lakukan tindakan lain setelah checkout gagal
-                }
-            })
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Terjadi kesalahan',
+                    text: 'Silakan coba lagi nanti.',
+                });
+                console.error("Checkout failed:", error);
+            }
         }
     </script>
     {{-- <script>

@@ -13,7 +13,7 @@ Route::get('beranda', function () {
 });
 Route::get('list-produk', function () {
     return view('listProduk');
-});
+})->name('list-produk');
 
 Route::get('detail-pesanan', function () {
     return view('detailpesanan');
@@ -23,4 +23,4 @@ Route::get('detail-pesanan', function () {
 Route::post('addToCart', [CartController::class, 'addToCart'])->name('addToCart');
 Route::get('getCart', [CartController::class, 'getCart'])->name('getCart');
 Route::post('removeFromCart', [CartController::class, 'removeFromCart'])->name('removeFromCart');
-Route::get('checkout', [CartController::class, 'checkout'])->name('checkout');
+Route::post('checkout', [CartController::class, 'checkout'])->name('checkout');

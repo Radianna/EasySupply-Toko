@@ -12,7 +12,7 @@ class CartController extends Controller
 
     public function __construct()
     {
-        $this->apiUrl = env('API_URL') . '/api/get-data-produk';
+        $this->apiUrl = env('API_URL');
     }
 
     public function addToCart(Request $request)
@@ -46,7 +46,7 @@ class CartController extends Controller
         // Mengambil data produk dari API berdasarkan produk ID
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $token,
-        ])->get($this->apiUrl . '/' . $produkId);
+        ])->get($this->apiUrl . '/api/get-data-produk' . '/' . $produkId);
 
         if ($response->successful()) {
             $productData = $response->json();
@@ -134,32 +134,50 @@ class CartController extends Controller
 
     public function checkout(Request $request)
     {
-        $user_id = $request->input('user_id');
-        $cart = session()->get('cart', []);
+        try {
+            $validated = $request->validate([
+                'id' => 'required|numeric',
+                'token' => 'required|string',
+            ]);
 
-        if (empty($cart)) {
-            return redirect()->route('keranjang');
+            $user_id = $validated['id'];
+            $token = $validated['token'];
+
+            $cart = session()->get('cart', []);
+            if (empty($cart)) {
+                return redirect()->route('list-produk')->withErrors(['message' => 'Keranjang kosong!']);
+            }
+
+            $totalQuantity = array_sum(array_column($cart, 'quantity'));
+            $totalPrice = array_sum(array_column($cart, 'harga'));
+
+            $pesanan = [
+                'user_id' => $user_id,
+                'detail_pesanan' => $cart,
+                'totalPesanan' => $totalQuantity,
+                'totalHarga' => $totalPrice,
+            ];
+
+            $response = Http::withHeaders(['Authorization' => 'Bearer ' . $token])
+                ->post($this->apiUrl . '/api/checkout', $pesanan);
+
+            if ($response->successful()) {
+                session()->forget('cart');
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Checkout berhasil!',
+                ]);
+            } else {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Checkout gagal. Silakan coba lagi.',
+                ]);
+            }
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ]);
         }
-
-        $totalQuantity = array_sum(array_column($cart, 'quantity'));
-        $totalPrice = array_sum(array_column($cart, 'harga'));
-
-        $pesanan = [
-            'user_id' => $user_id,
-            'pesanan' => $cart,
-            'totalPesanan' => $totalQuantity,
-            'totalHarga' => $totalPrice
-        ];
-        // kirimkan ke API
-        $response = Http::post($this->apiUrl . '/api/checkout', $pesanan);
-
-        if ($response->successful()) {
-            // Lakukan tindakan lain setelah checkout berhasil
-            return redirect()->route('beranda');
-        } else {
-            // Lakukan tindakan lain setelah checkout gagal
-            return redirect()->route('keranjang');
-        }
-        
     }
 }
