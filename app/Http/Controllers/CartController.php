@@ -19,8 +19,7 @@ class CartController extends Controller
     {
         $produkId = $request->input('id');
         $quantity = $request->input('quantity');
-
-        Log::info('Produk ID:', ['id' => $produkId, 'quantity' => $quantity]);
+        $token = $request->input('token');
 
         // Ambil keranjang dari session atau buat array kosong
         $cart = session()->get('cart', []);
@@ -45,7 +44,9 @@ class CartController extends Controller
         }
 
         // Mengambil data produk dari API berdasarkan produk ID
-        $response = Http::get($this->apiUrl . '/' . $produkId);
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->get($this->apiUrl . '/' . $produkId);
 
         if ($response->successful()) {
             $productData = $response->json();
@@ -129,5 +130,36 @@ class CartController extends Controller
             'success' => false,
             'message' => 'Product not found in cart',
         ], 404);
+    }
+
+    public function checkout(Request $request)
+    {
+        $user_id = $request->input('user_id');
+        $cart = session()->get('cart', []);
+
+        if (empty($cart)) {
+            return redirect()->route('keranjang');
+        }
+
+        $totalQuantity = array_sum(array_column($cart, 'quantity'));
+        $totalPrice = array_sum(array_column($cart, 'harga'));
+
+        $pesanan = [
+            'user_id' => $user_id,
+            'pesanan' => $cart,
+            'totalPesanan' => $totalQuantity,
+            'totalHarga' => $totalPrice
+        ];
+        // kirimkan ke API
+        $response = Http::post($this->apiUrl . '/api/checkout', $pesanan);
+
+        if ($response->successful()) {
+            // Lakukan tindakan lain setelah checkout berhasil
+            return redirect()->route('beranda');
+        } else {
+            // Lakukan tindakan lain setelah checkout gagal
+            return redirect()->route('keranjang');
+        }
+        
     }
 }

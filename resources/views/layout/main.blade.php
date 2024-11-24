@@ -49,7 +49,7 @@
             <div id="profileMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-30">
                 <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-gray-200">Profile</a>
                 <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-gray-200">Settings</a>
-                <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-gray-200">Logout</a>
+                <button id="logoutButton" class="block px-4 py-2 text-gray-800 hover:bg-gray-200">Logout</button>
             </div>
         </div>
     </nav>
@@ -125,30 +125,72 @@
             }
         }
 
-        // Fetch daftar produk
         async function fetchProducts() {
             try {
-                await fetchCart(); // Pastikan data keranjang diambil lebih dulu
+                await fetchCart(); // Pastikan data keranjang sudah diambil.
 
-                const response = await fetch(`${apiUrl}/api/get-list-produk`);
+                const response = await fetch(`${apiUrl}/api/get-list-produk`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
                 if (!response.ok) throw new Error("Failed to fetch product data");
 
                 const products = await response.json();
-                renderProductList(products);
+                const imageUrls = products.map(product => product.gambar); // Ambil path gambar
+                await fetchImagesInBatch(imageUrls); // Fetch batch image
+
+                renderProductList(products); // Render daftar produk
             } catch (error) {
                 console.error('Error fetching products:', error);
             }
         }
 
-        // Ambil image
-        async function fetchImage(url) {
-            try {
-                const response = await fetch(`${apiUrl}/api/get-image-produk/${url}`);
-                if (!response.ok) throw new Error("Failed to fetch image");
-            } catch (error) {            
-                console.error('Error fetching image:', error);
+        async function fetchImagesInBatch(filePaths, batchSize = 10) {
+            if (!Array.isArray(filePaths) || filePaths.length === 0) {
+                console.error("Invalid file paths provided.");
+                return;
             }
+
+            // Bagi filePaths ke dalam batch
+            const batches = [];
+            for (let i = 0; i < filePaths.length; i += batchSize) {
+                batches.push(filePaths.slice(i, i + batchSize));
+            }
+
+            for (const batch of batches) {
+                try {
+                    const response = await fetch(`${apiUrl}/api/get-batch-image-produk`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        },
+                        body: JSON.stringify({
+                            file_paths: batch
+                        })
+                    });
+
+                    if (!response.ok) throw new Error(`Batch fetch failed: ${response.statusText}`);
+
+                    const images = await response.json();
+                    images.forEach(image => {
+                        if (image.path) {
+                            // Cache hasil ke localStorage
+                            localStorage.setItem(image.filename, image.path);
+                        } else if (image.error) {
+                            console.warn(`Error for file ${image.filename}: ${image.error}`);
+                        }
+                    });
+                } catch (error) {
+                    console.error('Batch fetch error:', error);
+                }
+            }
+            console.log('All batches processed.');
         }
+
+
 
         // Render daftar produk ke UI
         function renderProductList(products) {
@@ -158,7 +200,6 @@
             products.forEach(product => {
                 // kondisi jika gambar sudah ada didalam storage/produk
                 // maka tidak perlu lagi fetch
-                fetchImage(product.gambar);
                 const defaultUnit = product.units[0];
                 const cartItem = findCartItemById(defaultUnit.id);
                 const quantity = cartItem ? cartItem.quantity : 0;
@@ -254,12 +295,14 @@
             }
 
             try {
+                const token = localStorage.getItem('token');
                 const response = await $.ajax({
                     url: `{{ route('addToCart') }}`,
                     method: 'POST',
                     data: {
                         id,
                         quantity,
+                        token,
                         _token: $('meta[name="csrf-token"]').attr('content')
                     },
                 });
@@ -371,10 +414,10 @@
                 console.error("Error removing item from cart:", error);
             }
         }
-
-
-        // Fungsi untuk checkout
-        function checkout() {
+    </script>
+    {{-- check out --}}
+    <script>
+        async function checkout() {
             if (cart.length === 0) {
                 alert('Keranjang kosong!');
                 return;
@@ -382,8 +425,74 @@
 
             alert('Lanjutkan ke pembayaran!');
             // Tambahkan logika checkout di sini
+            $.ajax({
+                url: `{{ route('checkout') }}`,
+                method: 'post',
+                data: {
+                    // id user
+                    id: localStorage.getItem('id'),
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                }
+                success: function(response) {
+                    console.log('Checkout successful:', response);
+                    // Lakukan tindakan lain setelah checkout berhasil
+                },
+                error: function(xhr, status, error) {
+                    console.error('Checkout failed:', error);
+                    // Lakukan tindakan lain setelah checkout gagal
+                }
+            })
         }
     </script>
+    {{-- <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cartButton = document.getElementById('cart-button');
+            const cartContainer = document.getElementById('cart-container');
+
+            cartButton.addEventListener('click', () => {
+                cartContainer.classList.toggle('hidden');    
+            });
+        })
+    </script> --}}
+    <script>
+        const profileButton = document.getElementById('profileButton');
+        const profileMenu = document.getElementById('profileMenu');
+
+        profileButton.addEventListener('click', () => {
+            profileMenu.classList.toggle('hidden');
+        });
+
+        // Menutup dropdown saat klik di luar menu
+        window.addEventListener('click', (e) => {
+            if (!profileButton.contains(e.target) && !profileMenu.contains(e.target)) {
+                profileMenu.classList.add('hidden');
+            }
+        });
+    </script>
+    {{-- check token --}}
+    <script>
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        });
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/';
+        }
+
+        // Fetch data protected by token
+        axios.get(`${apiUrl}/api/protected-data`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        }).then(response => {
+            console.log(response.data);
+        }).catch(error => {
+            window.location.href = '/';
+        });
+    </script>
+
     @yield('script')
 </body>
 
