@@ -216,11 +216,11 @@
                     <div class="flex items-center mt-2">
                         <select class="border border-gray-300 rounded-lg text-sm p-2" onchange="updateHarga(${product.id}, this)">
                             ${product.units.map(unit => `
-                                            <option value="${unit.harga}" data-mapping-id="${unit.id}" 
-                                                ${unit.id === defaultUnit.id ? 'selected' : ''}>
-                                                ${unit.unit_name}
-                                            </option>
-                                        `).join('')}
+                                                <option value="${unit.harga}" data-mapping-id="${unit.id}" 
+                                                    ${unit.id === defaultUnit.id ? 'selected' : ''}>
+                                                    ${unit.unit_name}
+                                                </option>
+                                            `).join('')}
                         </select>
                         <div class="flex ml-2">
                             <button onclick="decreaseQty(${product.id})" class="bg-gray-200 text-gray-700 px-2 mx-2">-</button>
@@ -454,7 +454,7 @@
                         title: 'Checkout berhasil!',
                         text: 'Pesanan Anda telah diproses.',
                     });
-                    fetchCart();
+                    fetchProducts();
                     closeCart();
                 } else {
                     Swal.fire({
@@ -472,18 +472,7 @@
                 console.error("Checkout failed:", error);
             }
         }
-    </script>
-    {{-- <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const cartButton = document.getElementById('cart-button');
-            const cartContainer = document.getElementById('cart-container');
 
-            cartButton.addEventListener('click', () => {
-                cartContainer.classList.toggle('hidden');    
-            });
-        })
-    </script> --}}
-    <script>
         const profileButton = document.getElementById('profileButton');
         const profileMenu = document.getElementById('profileMenu');
 
@@ -500,9 +489,19 @@
     </script>
     {{-- check token --}}
     <script>
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            localStorage.removeItem('token');
-            window.location.href = '/';
+        document.getElementById('logoutButton').addEventListener('click', async () => {
+            try {
+                await axios.post(`${apiUrl}/api/logout`, {}, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+            } catch (error) {
+                console.error('Logout failed on server:', error);
+            } finally {
+                localStorage.removeItem('token'); // Hapus token lokal
+                window.location.href = '/';
+            }
         });
 
         const token = localStorage.getItem('token');
@@ -510,16 +509,16 @@
             window.location.href = '/';
         }
 
-        // Fetch data protected by token
-        axios.get(`${apiUrl}/api/protected-data`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        }).then(response => {
-            console.log(response.data);
-        }).catch(error => {
-            window.location.href = '/';
-        });
+        // // Fetch data protected by token
+        // axios.get(`${apiUrl}/api/protected-data`, {
+        //     headers: {
+        //         'Authorization': `Bearer ${localStorage.getItem('token')}`
+        //     }
+        // }).then(response => {
+        //     console.log(response.data);
+        // }).catch(error => {
+        //     window.location.href = '/';
+        // });
     </script>
 
     @yield('script')
