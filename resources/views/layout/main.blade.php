@@ -29,6 +29,7 @@
         overflow-y: auto;
     }
 </style>
+@yield('style')
 
 <body class="bg-[#F8F9FA]">
     <!-- Header -->
@@ -199,8 +200,6 @@
             let productHTML = '';
 
             products.forEach(product => {
-                // kondisi jika gambar sudah ada didalam storage/produk
-                // maka tidak perlu lagi fetch
                 const defaultUnit = product.units[0];
                 const cartItem = findCartItemById(defaultUnit.id);
                 const quantity = cartItem ? cartItem.quantity : 0;
